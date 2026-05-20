@@ -45,8 +45,8 @@ This project is a self-contained web app deployable as a static site
 
 ### Live demo
 
-> **Sender** → `https://blep.github.io/pixbeam/sender.html`  
-> **Receiver** → `https://blep.github.io/pixbeam/receiver.html`
+- [Sender](https://blep.github.io/pixbeam/sender.html)
+- [Receiver](https://blep.github.io/pixbeam/receiver.html)
 
 ### Transferring a file
 

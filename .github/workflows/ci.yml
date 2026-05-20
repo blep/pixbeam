@@ -33,6 +33,9 @@ jobs:
       - name: Type-check
         run: pnpm exec tsc --noEmit
 
+      - name: Lint (browser source)
+        run: pnpm lint
+
       - name: Test (CI tier)
         run: pnpm test
 

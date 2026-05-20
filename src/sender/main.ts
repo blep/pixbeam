@@ -85,7 +85,7 @@ async function startTransfer(file: File): Promise<void> {
     // Render QR code directly to canvas (faster than toDataURL)
     await QRCode.toCanvas(
       qrCanvas,
-      [{ data: Buffer.from(frame.payload), mode: 'byte' }],
+      [{ data: frame.payload, mode: 'byte' }],
       { version: 40, errorCorrectionLevel: 'L', margin: 2, scale: 4, color: { dark: '#000', light: '#fff' } }
     );
 

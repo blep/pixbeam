@@ -140,8 +140,8 @@ There is one workflow:
 
 | Job              | Steps                                                     |
 |------------------|-----------------------------------------------------------|
-| `test-and-build` | Install deps → type-check → CI tests → Vite build →      |
-|                  | upload `dist/` as a Pages artifact                        |
+| `test-and-build` | Install deps → type-check → lint → CI tests → Vite build |
+|                  | → upload `dist/` as a Pages artifact                      |
 | `deploy`         | Deploy the artifact to GitHub Pages (only on `main`)      |
 
 The `deploy` job depends on `test-and-build`, so a failing test or type

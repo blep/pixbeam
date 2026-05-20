@@ -46,7 +46,7 @@ async function startReceiving(): Promise<void> {
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
     });
-  } catch (err) {
+  } catch {
     showError('Camera access denied — please allow camera and reload.');
     return;
   }

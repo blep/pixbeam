@@ -59,13 +59,37 @@ body {
   left: 0;
   right: 0;
   padding: .75rem 1rem;
-  background: rgba(0,0,0,.65);
+  background: rgba(0,0,0,.72);
   backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
-  gap: .4rem;
+  gap: .5rem;
 }
-#status-text { font-size: .9rem; color: #ddd; }
+
+/* ── Detection counters ── */
+#counters {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  font-size: .82rem;
+}
+.counter {
+  display: flex;
+  align-items: baseline;
+  gap: .3rem;
+}
+.counter-label { color: #888; }
+.counter-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #ddd;
+  min-width: 2ch;
+}
+/* Light up once we're actually seeing valid packets */
+.counter-value.active { color: #7c6af7; }
+.counter-sep { color: #444; }
+
+#status-text { font-size: .85rem; color: #bbb; min-height: 1.2em; }
 
 .progress-row {
   display: flex;

@@ -17,10 +17,25 @@
   <div id="scan-screen" hidden>
     <video id="preview" autoplay muted playsinline></video>
     <canvas id="scan-canvas" hidden></canvas>
+
     <div id="status-bar">
-      <span id="status-text">Waiting for header…</span>
+      <!-- Always-visible counters: confirm camera + protocol are working -->
+      <div id="counters">
+        <span class="counter">
+          <span class="counter-label">QR detected</span>
+          <span class="counter-value" id="cnt-detected">0</span>
+        </span>
+        <span class="counter-sep">·</span>
+        <span class="counter">
+          <span class="counter-label">pixbeam packets</span>
+          <span class="counter-value" id="cnt-valid">0</span>
+        </span>
+      </div>
+
+      <span id="status-text"></span>
       <div id="progress-bars"></div>
     </div>
+
     <button id="cancel-btn">Cancel</button>
   </div>
 

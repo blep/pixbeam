@@ -1,5 +1,7 @@
 # pixbeam
 
+> ⚠️ **Work in progress — untested.** The code has not yet been run end-to-end on real hardware. The sender/receiver apps have not been tested yet.
+
 A practical demo exploring **RaptorQ fountain codes** (RFC 6330) for reliable file transfer over an unreliable optical channel: any screen → phone camera, no Wi-Fi, no cables, no back-channel.
 
 The sender displays an endless animated stream of Version 40-L QR codes on any device with a browser and a display — laptop, desktop, tablet, TV, e-reader, or embedded screen. The receiver scans them with a phone camera and reconstructs the original file. Because RaptorQ is a fountain code, the receiver can start at any time, miss arbitrary frames, and still recover the file once it has collected enough unique encoded symbols — no retransmission, no acknowledgement.

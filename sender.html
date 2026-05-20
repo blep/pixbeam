@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pixbeam — Sender</title>
+  <link rel="stylesheet" href="/src/sender/style.css" />
+</head>
+<body>
+  <div id="pick-screen">
+    <h1>pixbeam <span>sender</span></h1>
+    <label id="drop-zone">
+      <input type="file" id="file-input" />
+      <span id="drop-label">Drop a file here or click to choose</span>
+    </label>
+    <p id="error-msg" hidden></p>
+  </div>
+
+  <div id="send-screen" hidden>
+    <canvas id="qr-canvas"></canvas>
+    <div id="hud">
+      <span id="hud-block"></span>
+      <span id="hud-frame"></span>
+      <span id="hud-fps"></span>
+      <button id="stop-btn">✕ Stop</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/sender/main.ts"></script>
+</body>
+</html>

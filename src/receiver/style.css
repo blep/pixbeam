@@ -1,0 +1,139 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0a0a0a;
+  color: #f0f0f0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── Start screen ── */
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+#start-screen h1 { font-size: 1.8rem; letter-spacing: -1px; }
+#start-screen h1 span { color: #7c6af7; }
+#start-screen p { color: #888; font-size: .95rem; }
+
+#start-btn {
+  background: #7c6af7;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: .75rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+#start-btn:hover { opacity: .85; }
+#error-msg { color: #e55; font-size: .88rem; }
+
+/* ── Scan screen ── */
+#scan-screen {
+  position: relative;
+  width: 100dvw;
+  height: 100dvh;
+}
+
+#preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: .75rem 1rem;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+#status-text { font-size: .9rem; color: #ddd; }
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .78rem;
+  color: #aaa;
+}
+.progress-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: #7c6af7;
+  border-radius: 3px;
+  transition: width .3s ease;
+}
+
+#cancel-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: 8px;
+  padding: .35rem .9rem;
+  cursor: pointer;
+  font-size: .82rem;
+}
+#cancel-btn:hover { background: rgba(255,80,80,.4); }
+
+/* ── Done screen ── */
+#done-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  text-align: center;
+  max-width: 400px;
+}
+#done-screen h2 { font-size: 1.6rem; }
+#done-info { color: #888; font-size: .9rem; }
+
+#download-link {
+  display: inline-block;
+  background: #7c6af7;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 12px;
+  padding: .75rem 2rem;
+  font-size: 1rem;
+  transition: opacity .15s;
+}
+#download-link:hover { opacity: .85; }
+
+#restart-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+  border-radius: 12px;
+  padding: .6rem 1.5rem;
+  font-size: .9rem;
+  cursor: pointer;
+}
+#restart-btn:hover { border-color: #888; color: #eee; }

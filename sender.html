@@ -7,23 +7,36 @@
   <link rel="stylesheet" href="/src/sender/style.css" />
 </head>
 <body>
-  <div id="pick-screen">
+  <!--
+    Layout: QR square always gets the largest possible region.
+    Landscape → panel on left, QR on right (full height).
+    Portrait  → panel on top, QR below (full width).
+  -->
+  <div id="panel">
     <h1>pixbeam <span>sender</span></h1>
-    <label id="drop-zone">
-      <input type="file" id="file-input" />
-      <span id="drop-label">Drop a file here or click to choose</span>
-    </label>
-    <p id="error-msg" hidden></p>
-  </div>
 
-  <div id="send-screen" hidden>
-    <canvas id="qr-canvas"></canvas>
-    <div id="hud">
-      <span id="hud-block"></span>
-      <span id="hud-frame"></span>
-      <span id="hud-fps"></span>
+    <div id="pick-ui">
+      <label id="drop-zone">
+        <input type="file" id="file-input" />
+        <span id="drop-label">Drop a file here<br>or click to choose</span>
+      </label>
+      <p id="error-msg" hidden></p>
+    </div>
+
+    <div id="send-ui" hidden>
+      <p id="send-filename"></p>
+      <dl id="stats">
+        <dt>Frames</dt><dd id="stat-frame">—</dd>
+        <dt>FPS</dt>   <dd id="stat-fps">—</dd>
+        <dt>Blocks</dt><dd id="stat-block">—</dd>
+      </dl>
       <button id="stop-btn">✕ Stop</button>
     </div>
+  </div>
+
+  <div id="qr-area">
+    <canvas id="qr-canvas"></canvas>
+    <p id="qr-hint">waiting for file…</p>
   </div>
 
   <script type="module" src="/src/sender/main.ts"></script>

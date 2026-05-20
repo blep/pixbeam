@@ -3,17 +3,20 @@ import QRCode from 'qrcode';
 import { Sender } from '../lib/sender.js';
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const pickScreen  = document.getElementById('pick-screen')!;
-const sendScreen  = document.getElementById('send-screen')!;
-const fileInput   = document.getElementById('file-input') as HTMLInputElement;
+const fileInput   = document.getElementById('file-input')   as HTMLInputElement;
 const dropZone    = document.getElementById('drop-zone')!;
 const dropLabel   = document.getElementById('drop-label')!;
 const errorMsg    = document.getElementById('error-msg')!;
-const qrCanvas    = document.getElementById('qr-canvas') as HTMLCanvasElement;
-const hudBlock    = document.getElementById('hud-block')!;
-const hudFrame    = document.getElementById('hud-frame')!;
-const hudFps      = document.getElementById('hud-fps')!;
+const pickUi      = document.getElementById('pick-ui')!;
+const sendUi      = document.getElementById('send-ui')!;
+const sendFilename = document.getElementById('send-filename')!;
+const statFrame   = document.getElementById('stat-frame')!;
+const statFps     = document.getElementById('stat-fps')!;
+const statBlock   = document.getElementById('stat-block')!;
 const stopBtn     = document.getElementById('stop-btn')!;
+const qrArea      = document.getElementById('qr-area')!;
+const qrCanvas    = document.getElementById('qr-canvas')  as HTMLCanvasElement;
+const qrHint      = document.getElementById('qr-hint')!;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let stopped = false;
@@ -28,7 +31,10 @@ fileInput.addEventListener('change', () => {
   if (file) startTransfer(file);
 });
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
@@ -39,10 +45,12 @@ dropZone.addEventListener('drop', e => {
 
 stopBtn.addEventListener('click', () => {
   stopped = true;
-  pickScreen.hidden = false;
-  sendScreen.hidden = true;
-  fileInput.value = '';
+  sendUi.hidden = true;
+  pickUi.hidden = false;
+  qrCanvas.style.display = 'none';
+  qrHint.style.display = '';
   dropLabel.textContent = 'Drop a file here or click to choose';
+  fileInput.value = '';
 });
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
@@ -71,9 +79,12 @@ async function startTransfer(file: File): Promise<void> {
   }
 
   stopped = false;
-  pickScreen.hidden = true;
-  sendScreen.hidden = false;
-  dropLabel.textContent = file.name;
+  pickUi.hidden = true;
+  sendUi.hidden = false;
+  sendFilename.textContent = file.name;
+
+  // Size the canvas to the QR area square so we get pixel-perfect rendering
+  const qrSize = qrArea.clientWidth;
 
   let totalFrames = 0;
   let fpsFrames = 0;
@@ -82,32 +93,39 @@ async function startTransfer(file: File): Promise<void> {
   for (const frame of sender) {
     if (stopped) break;
 
-    // Render QR code directly to canvas (faster than toDataURL)
     await QRCode.toCanvas(
       qrCanvas,
       [{ data: frame.payload, mode: 'byte' }],
-      { version: 40, errorCorrectionLevel: 'L', margin: 2, scale: 4, color: { dark: '#000', light: '#fff' } }
+      {
+        version: 40,
+        errorCorrectionLevel: 'L',
+        margin: 2,
+        width: qrSize,
+        color: { dark: '#000000', light: '#ffffff' },
+      }
     );
+
+    // Reveal canvas after first frame
+    if (totalFrames === 0) {
+      qrCanvas.style.display = 'block';
+      qrHint.style.display = 'none';
+    }
 
     totalFrames++;
     fpsFrames++;
 
-    // Update HUD
     const prog = sender.progress();
-    const dataBlocks = prog.slice(1); // skip metadata block 0
-    hudBlock.textContent = dataBlocks.map(b =>
-      `blk${b.blockNum}: ${b.framesSent}`
-    ).join(' | ');
-    hudFrame.textContent = `frame ${totalFrames}`;
+    const dataBlocks = prog.filter(b => !b.isMetadata);
+    statFrame.textContent = String(totalFrames);
+    statBlock.textContent = dataBlocks.map(b => `${b.framesSent}`).join(' / ');
 
     const now = performance.now();
     if (now - fpsStart >= 1000) {
-      hudFps.textContent = `${(fpsFrames / ((now - fpsStart) / 1000)).toFixed(1)} fps`;
+      statFps.textContent = `${(fpsFrames / ((now - fpsStart) / 1000)).toFixed(1)}`;
       fpsFrames = 0;
       fpsStart = now;
     }
 
-    // Yield to browser between frames (~80 ms target = ~12 fps)
     await sleep(80);
   }
 }

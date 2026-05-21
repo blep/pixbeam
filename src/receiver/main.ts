@@ -8,9 +8,10 @@ const scanScreen   = document.getElementById('scan-screen')!;
 const doneScreen   = document.getElementById('done-screen')!;
 const startBtn     = document.getElementById('start-btn')!;
 const errorMsg     = document.getElementById('error-msg')!;
-const preview      = document.getElementById('preview') as HTMLVideoElement;
-const scanCanvas   = document.getElementById('scan-canvas') as HTMLCanvasElement;
-const statusText   = document.getElementById('status-text')!;
+const preview       = document.getElementById('preview')        as HTMLVideoElement;
+const scanCanvas    = document.getElementById('scan-canvas')    as HTMLCanvasElement;
+const overlayCanvas = document.getElementById('overlay-canvas') as HTMLCanvasElement;
+const statusText    = document.getElementById('status-text')!;
 const progressBars = document.getElementById('progress-bars')!;
 const cancelBtn    = document.getElementById('cancel-btn')!;
 const cntDetected  = document.getElementById('cnt-detected')!;
@@ -94,13 +95,14 @@ async function startReceiving(): Promise<void> {
     const imageData = ctx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
 
     const qr = jsQR(imageData.data, imageData.width, imageData.height);
+    drawOverlay(qr);
+
     if (qr) {
       totalDetected++;
       cntDetected.textContent = String(totalDetected);
 
       const payload = new Uint8Array(qr.binaryData);
-      // receiver.receive() internally validates the CRC — count it as valid
-      // only when the payload is long enough to be a pixbeam frame
+      // count as valid pixbeam only when the payload is the right length
       const wasValid = payload.length === 2953;
       receiver.receive(payload);
       if (wasValid) {
@@ -185,4 +187,63 @@ function updateProgress(rx: Receiver): void {
 function showError(msg: string): void {
   errorMsg.textContent = msg;
   errorMsg.hidden = !msg;
+}
+
+/**
+ * Draw (or clear) the QR bounding box on the transparent overlay canvas.
+ * Called every frame so the box disappears as soon as the code leaves view.
+ *
+ * Coordinate transform: jsQR reports positions in scanCanvas (camera)
+ * resolution; the overlay matches the CSS display size of the video, which
+ * uses object-fit:cover, so we apply the same scale + centering offset.
+ */
+function drawOverlay(qr: ReturnType<typeof jsQR>): void {
+  // Match overlay resolution to its CSS size each frame (handles resize)
+  const dw = overlayCanvas.clientWidth;
+  const dh = overlayCanvas.clientHeight;
+  if (overlayCanvas.width !== dw)  overlayCanvas.width  = dw;
+  if (overlayCanvas.height !== dh) overlayCanvas.height = dh;
+
+  const ctx = overlayCanvas.getContext('2d')!;
+  ctx.clearRect(0, 0, dw, dh);
+  if (!qr) return;
+
+  // object-fit:cover scale + centering offset from camera → display coords
+  const cw = scanCanvas.width;
+  const ch = scanCanvas.height;
+  const scale = Math.max(dw / cw, dh / ch);
+  const ox = (dw - cw * scale) / 2;
+  const oy = (dh - ch * scale) / 2;
+  const tx = (p: {x: number; y: number}) =>
+    ({ x: p.x * scale + ox, y: p.y * scale + oy });
+
+  const isPixbeam = qr.binaryData.length === 2953;
+  // purple for pixbeam frames, orange for unrelated QR codes
+  const color = isPixbeam ? '#7c6af7' : '#f7a620';
+  const lw = Math.max(2, scale * 3);
+
+  // Outline the four corners of the QR code
+  const { topLeftCorner: tl, topRightCorner: tr,
+          bottomRightCorner: br, bottomLeftCorner: bl } = qr.location;
+  const corners = [tl, tr, br, bl].map(tx);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(corners[0]!.x, corners[0]!.y);
+  for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Small filled squares at the three finder patterns (top-left, top-right, bottom-left)
+  const fps = [qr.location.topLeftFinderPattern,
+               qr.location.topRightFinderPattern,
+               qr.location.bottomLeftFinderPattern];
+  const sq = Math.max(6, scale * 8);
+  ctx.fillStyle = color;
+  for (const fp of fps) {
+    const p = tx(fp);
+    ctx.fillRect(p.x - sq / 2, p.y - sq / 2, sq, sq);
+  }
 }

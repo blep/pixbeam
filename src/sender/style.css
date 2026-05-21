@@ -118,6 +118,20 @@ h1 span { color: #7c6af7; }
 #stats dt { color: #666; }
 #stats dd { color: #ccc; font-variant-numeric: tabular-nums; }
 
+#fps-control {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  width: 100%;
+}
+#fps-control label { font-size: .8rem; color: #aaa; }
+#fps-control strong { color: #f0f0f0; }
+#fps-slider {
+  width: 100%;
+  accent-color: #7c6af7;
+  cursor: pointer;
+}
+
 #stop-btn {
   margin-top: auto;
   align-self: flex-start;

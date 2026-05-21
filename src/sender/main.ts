@@ -14,6 +14,8 @@ const statFrame   = document.getElementById('stat-frame')!;
 const statFps     = document.getElementById('stat-fps')!;
 const statBlock   = document.getElementById('stat-block')!;
 const stopBtn     = document.getElementById('stop-btn')!;
+const fpsSlider   = document.getElementById('fps-slider')  as HTMLInputElement;
+const fpsLabel    = document.getElementById('fps-label')!;
 const qrArea      = document.getElementById('qr-area')!;
 const qrCanvas    = document.getElementById('qr-canvas')  as HTMLCanvasElement;
 const qrHint      = document.getElementById('qr-hint')!;
@@ -41,6 +43,10 @@ dropZone.addEventListener('drop', e => {
   dropZone.classList.remove('dragover');
   const file = e.dataTransfer?.files[0];
   if (file) startTransfer(file);
+});
+
+fpsSlider.addEventListener('input', () => {
+  fpsLabel.textContent = fpsSlider.value;
 });
 
 stopBtn.addEventListener('click', () => {
@@ -126,7 +132,7 @@ async function startTransfer(file: File): Promise<void> {
       fpsStart = now;
     }
 
-    await sleep(80);
+    await sleep(1000 / Number(fpsSlider.value));
   }
 }
 

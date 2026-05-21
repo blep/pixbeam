@@ -17,6 +17,8 @@
   <div id="scan-screen" hidden>
     <video id="preview" autoplay muted playsinline></video>
     <canvas id="scan-canvas" hidden></canvas>
+    <!-- Transparent overlay; QR bounding box drawn here each frame -->
+    <canvas id="overlay-canvas"></canvas>
 
     <div id="status-bar">
       <!-- Always-visible counters: confirm camera + protocol are working -->

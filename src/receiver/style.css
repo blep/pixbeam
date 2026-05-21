@@ -97,6 +97,14 @@ body {
 /* Light up once we're actually seeing valid packets */
 .counter-value.active { color: #7c6af7; }
 .counter-sep { color: #444; }
+.badge {
+  font-size: .7rem;
+  padding: .15rem .45rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,.1);
+  color: #888;
+  letter-spacing: .03em;
+}
 
 #status-text { font-size: .85rem; color: #bbb; min-height: 1.2em; }
 

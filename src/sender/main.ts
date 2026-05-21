@@ -105,7 +105,7 @@ async function startTransfer(file: File): Promise<void> {
       {
         version: 40,
         errorCorrectionLevel: 'L',
-        margin: 2,
+        margin: 4, // spec minimum; narrower margins confuse strict decoders
         width: qrSize,
         color: { dark: '#000000', light: '#ffffff' },
       }

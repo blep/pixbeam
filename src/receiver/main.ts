@@ -80,11 +80,27 @@ async function startReceiving(): Promise<void> {
     return;
   }
 
-  preview.srcObject = stream;
-  await preview.play();
-  await new Promise<void>(r => {
+  // Register the loadedmetadata listener BEFORE setting srcObject to avoid
+  // the race where the event fires before the listener is attached.
+  const metaReady = new Promise<void>(r => {
+    if (preview.readyState >= HTMLMediaElement.HAVE_METADATA) { r(); return; }
     preview.addEventListener('loadedmetadata', () => r(), { once: true });
   });
+
+  preview.srcObject = stream;
+
+  // play() can throw on iOS when the user-gesture chain is broken by the
+  // async getUserMedia call. A muted video with playsinline should always
+  // be allowed, but catch and surface errors rather than hanging silently.
+  try {
+    await preview.play();
+  } catch (err) {
+    showError(`Could not start video playback: ${err instanceof Error ? err.message : err}`);
+    stream.getTracks().forEach(t => t.stop());
+    return;
+  }
+
+  await metaReady;
 
   // scanCanvas only used by the jsQR path; size it at startup
   scanCanvas.width  = preview.videoWidth;

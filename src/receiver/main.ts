@@ -296,7 +296,7 @@ function handleComplete(file: Uint8Array): void {
   const blob = new Blob([file.buffer as ArrayBuffer]);
   downloadLink.href = URL.createObjectURL(blob);
   downloadLink.download = `pixbeam-${Date.now()}.bin`;
-  downloadLink.click();
+  downloadLink.textContent = `Download (${sizeMB} MB)`;
 }
 
 // ── Progress ──────────────────────────────────────────────────────────────────

@@ -1,5 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* CSS display properties on specific elements would otherwise override the
+   browser's default [hidden]{display:none} because ID selectors (1,0,0)
+   beat attribute selectors (0,1,0) in specificity. */
+[hidden] { display: none !important; }
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   background: #0a0a0a;

@@ -46,14 +46,16 @@ class PixelPerfectDisplay:
         self.root = tk.Tk()
         self.root.title("pixbeam emitter")
 
-        # Remove window decorations for exact pixel positioning
-        self.root.overrideredirect(True)
-
-        # Position window at exact coordinates
+        # Position window at the requested coordinates. The window manager
+        # adds the title bar outside this rectangle, so the client area stays
+        # exactly width x height at (x, y).
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
+        # Closing via the standard title-bar X button / Alt+F4 stops the loop.
+        self.root.protocol("WM_DELETE_WINDOW", self.quit)
+
         # Keep window on top (optional - comment out if not wanted)
-        self.root.wm_attributes("-topmost", True)
+        # self.root.wm_attributes("-topmost", True)
 
         # Configure for pixel-perfect display
         self.root.configure(bg="black")
@@ -81,6 +83,9 @@ class PixelPerfectDisplay:
 
         # Bind escape key to exit
         self.root.bind("<Escape>", lambda _e: self.quit())
+
+        # Give the window keyboard focus so Escape works immediately
+        self.root.focus_force()
 
     def update_image(self, image_array: np.ndarray) -> None:
         """
@@ -143,6 +148,8 @@ class PixelPerfectDisplay:
                     # Wait for next frame
                     time.sleep(interval)
                 except Exception as e:  # noqa: BLE001 - display loop must not die
+                    if not self.running:
+                        break  # window was closed; don't print a spurious error
                     print(f"Update error: {e}")
                     break
 
@@ -181,7 +188,7 @@ class PixelPerfectDisplay:
 
 
 def make_frame_generator(data: bytes, width: int, height: int):
-    """Return a generator of RGB frames derived from ``data``.
+    """Return a callable producing RGB frames derived from ``data``.
 
     Each frame is a deterministic, data-seeded pattern so the receiver can
     verify that what the capture card delivers matches what was sent.
@@ -191,11 +198,12 @@ def make_frame_generator(data: bytes, width: int, height: int):
     YUV 4:2:2 chroma subsampling.
     """
 
-    def generator():
-        frame_number = 0
-        while True:
-            frame_number += 1
-            yield encode_pattern_frame(data, width, height, frame_number)
+    frame_number = 0
+
+    def generator() -> np.ndarray:
+        nonlocal frame_number
+        frame_number += 1
+        return encode_pattern_frame(data, width, height, frame_number)
 
     return generator
 
@@ -244,9 +252,9 @@ def main() -> None:
         f"({args.fps} fps) — press Escape to quit"
     )
     if args.blocking:
-        display.run_blocking(generator(), args.fps)
+        display.run_blocking(generator, args.fps)
     else:
-        display.run_update_loop(generator(), args.fps)
+        display.run_update_loop(generator, args.fps)
 
 
 if __name__ == "__main__":

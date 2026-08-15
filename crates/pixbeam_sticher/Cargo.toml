@@ -1,0 +1,8 @@
+[package]
+name = "pixbeam_sticher"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pixbeam_decoder = { path = "../pixbeam_decoder" }
+thiserror = { workspace = true }

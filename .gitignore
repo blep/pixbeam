@@ -1,24 +1,12 @@
-# Dependencies
-node_modules/
+# Rust build output
+/target/
 
-# Build output
-dist/
+# Python
+.venv/
+__pycache__/
+*.pyc
 
-# Vite
-.vite/
-
-# TypeScript
-*.tsbuildinfo
-
-# Test coverage
-coverage/
-
-# Local env
-.env
-.env.local
-
-# Editor
-.DS_Store
-*.swp
+# Editor / OS
 .idea/
-*.iml
+*.swp
+.DS_Store

@@ -1,222 +1,75 @@
 # pixbeam
 
-> ⚠️ **Work in progress — untested.** The code has not yet been run
-> end-to-end on real hardware. The sender/receiver apps have not been
-> tested yet.
+> A practical demo for exploring high-throughput data transfer via image
+> encoding through an HDMI video capture card, which has imperfect color
+> capture due to YUV 4:2:2 compression/encoding.
 
-A practical demo exploring **RaptorQ fountain codes** (RFC 6330) for
-reliable file transfer over an unreliable optical channel: any screen →
-phone camera, no Wi-Fi, no cables, no back-channel.
+pixbeam sends data from one machine to another using only light: the
+**emitter** encodes bytes into full-screen images, an **HDMI capture card**
+picks up that signal, and the **receiver** decodes the images back into the
+original file.
 
-The sender displays an endless animated stream of Version 40-L QR codes
-on any device with a browser and a display — laptop, desktop, tablet, TV,
-e-reader, or embedded screen. The receiver scans them with a phone camera
-and reconstructs the original file. Because RaptorQ is a fountain code,
-the receiver can start at any time, miss arbitrary frames, and still
-recover the file once it has collected enough unique encoded symbols — no
-retransmission, no acknowledgement.
+The catch — and the point of this project — is that the capture card does not
+see colors faithfully. It converts the signal to **YUV 4:2:2**, storing
+color (chroma) at half the horizontal resolution of brightness (luma).
+Choosing an encoding that survives that conversion is the core engineering
+problem here.
 
-This project is a self-contained web app deployable as a static site
-(GitHub Pages or local file serving).
+The first prototype transmitted files as an endless stream of QR codes
+(version 40, RaptorQ fountain coding). It worked, but was slow (a QR code is
+only ~3 KB per frame) and targeted a phone camera. This project replaces QR
+codes with a custom, high-density pixel encoding optimized for a fixed
+capture card — the same framing ideas carry over (integrity checks,
+metadata bootstrap, fountain-coded blocks). The QR prototype is archived on
+the `main_old_qrcode` branch.
 
-> **Disclaimer**: pixbeam is a fun, vibe-coded experiment — not
-> production software. Use it to learn about fountain codes, or transfer
-> files in unusual situations. Don't rely on it for anything critical.
-> Worked on the archi with DeepSeek while learning about fountain code
-> properties, implemented by Claude Code.
->
-> **Tip**: transfer compressed archives (`.zip`, `.gz`, …) rather than
-> raw files. Compression formats embed a checksum (CRC-32 for ZIP, gzip
-> header checksum for `.tar.gz`), so the receiving application will tell
-> you immediately if the transfer was corrupted. It's the simplest
-> integrity check you can get for free.
+## What's in this repo
 
----
+| Component | Kind | Role |
+|---|---|---|
+| **`pixbeam`** (`crates/pixbeam`) | Rust GUI (egui) | **the main crate** — receiver control + progress |
+| `pixbeam_decoder` | Rust lib | capture card input, pixel → packet decoding |
+| `pixbeam_sticher` | Rust lib | accumulates decoded packets into the output file |
+| `pixbeam_calibrate` | Rust GUI | shows YUV test colors, grabs what the card delivers |
+| **`pixbeam`** (`pixbeam/`) | Python package | **the emitter** — displays encoded frames |
 
-## Using pixbeam
+## Quickstart
 
-### Requirements
+Prerequisites:
 
-- **Sender**: any browser on any device with a display — laptop, desktop,
-  tablet, TV, Raspberry Pi, etc.
-- **Receiver**: any mobile browser with camera access (HTTPS required —
-  GitHub Pages provides this)
-- No installation, no account, no server
+- Rust toolchain (edition 2024; tested with 1.96)
+- [uv](https://docs.astral.sh/uv/) for the Python side
+- An HDMI capture card exposing a V4L2 device (e.g. `/dev/video4`)
 
-### Live demo
-
-- [Sender](https://blep.github.io/pixbeam/sender.html)
-- [Receiver](https://blep.github.io/pixbeam/receiver.html)
-
-### Transferring a file
-
-1. Open the **Sender** page on any device with a screen and a browser.
-2. Drop or select any file. The screen fills with an animated QR stream.
-3. Open the **Receiver** page on your phone and tap **Start camera**.
-4. Point the camera at the sender's screen. A progress bar shows
-   decoding progress per block.
-5. When the transfer is complete the file downloads automatically.
-
-### Tips
-
-- **Distance**: 30–60 cm works well for a typical phone camera and
-  laptop/tablet screen. Larger displays (TV, monitor) can be read from
-  further away.
-- **Lighting**: avoid strong reflections on the sender's screen. Matte
-  screens work better than glossy.
-- **Frame rate**: the sender targets ~12 fps. If the phone camera
-  struggles, increase ambient light or reduce the browser zoom level.
-- **Large files**: throughput is ~29 KB/s at 10 fps. A 10 MB file takes
-  ~6 minutes; plan accordingly. Files above ~42 GB are rejected (protocol
-  limit).
-
----
-
-## Developer guide
-
-### Architecture
-
-The design is documented in detail in [docs/archi.md](docs/archi.md).
-Key points:
-
-- Each QR code carries **2,953 bytes**: a 2-byte CRC16 integrity field,
-  a 1-byte block number, and a 2,950-byte RaptorQ `EncodingPacket`.
-- Files are split into **source blocks** (≤166 MB each). Block 0 is a
-  tiny 16-byte metadata block that the receiver decodes first to learn
-  the file size and block count.
-- The sender generates symbols indefinitely using **exponential repair
-  doubling** — no cycling, no fixed pool limit — so the transfer makes
-  progress at any loss rate.
-- The receiver buffers symbols for data blocks that arrive before Block 0
-  is decoded, then replays them once metadata is known.
-
-### Building and running locally
+Receive (Rust):
 
 ```bash
-# Install dependencies (pnpm required)
-pnpm install
-
-# Start development server (all three pages served with HMR)
-pnpm dev
-# Sender:   http://localhost:5173/sender.html
-# Receiver: http://localhost:5173/receiver.html
-
-# Type-check
-pnpm exec tsc --noEmit
-
-# Production build → dist/
-pnpm build
-
-# Preview production build locally
-pnpm preview
+cargo run -p pixbeam
 ```
 
-### Testing
+Calibrate colors (Rust):
 
 ```bash
-# CI tests — fast protocol unit tests + QR smoke tests (~5 s)
-pnpm test
-
-# Local tests — optical channel simulation with real QR images (minutes)
-# Requires: sharp (native, installed as optional dep)
-pnpm test:local
-
-# Stress tests — large files, high loss, dual-receiver (hours)
-pnpm test:stress
-
-# Reproduce a specific failure by seed
-SEED=3141592653 pnpm test:local
+cargo run -p pixbeam_calibrate
 ```
 
-See [docs/testing.md](docs/testing.md) for the full testing strategy,
-channel simulation design, and how deterministic seeding works.
+Emit (Python):
 
-### GitHub Actions
-
-There is one workflow:
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
-
-#### What it does
-
-| Job              | Steps                                                     |
-|------------------|-----------------------------------------------------------|
-| `test-and-build` | Install deps → type-check → lint → CI tests → Vite build |
-|                  | → upload `dist/` as a Pages artifact                      |
-| `deploy`         | Deploy the artifact to GitHub Pages (only on `main`)      |
-
-The `deploy` job depends on `test-and-build`, so a failing test or type
-error blocks deployment.
-
-#### When it runs — automatically
-
-| Event                          | `test-and-build` | `deploy` |
-|--------------------------------|:----------------:|:--------:|
-| Push to `main`                 | ✅               | ✅       |
-| Pull request targeting `main`  | ✅               | ✗        |
-
-PRs get full CI validation but never touch the live site.
-
-#### One-time setup required
-
-Deployment will silently skip until GitHub Pages is enabled:
-
-1. **Settings → Pages → Source → GitHub Actions**
-   (not "Deploy from a branch")
-2. Write permission to Pages is already declared in the workflow file
-   (`permissions: pages: write, id-token: write`) — no extra setting
-   needed.
-
-After the first successful push to `main` the site will be live at:
-
-```
-https://<your-github-username>.github.io/pixbeam/
+```bash
+uv venv --python 3.14 .venv
+uv pip install -r requirements.txt
+uv run python pixbeam/main.py --file some.bin
 ```
 
-The base URL `/pixbeam/` is hardcoded in `vite.config.ts`. If you fork
-under a different repository name, update `base` to match.
+Press `Escape` in the emitter window to quit.
 
-### Repository layout
+## Status
 
-```
-pixbeam/
-├── index.html        # Landing page (links to sender and receiver)
-├── sender.html       # Sender app entry point
-├── receiver.html     # Receiver app entry point
-│
-├── src/
-│   ├── lib/          # Pure protocol logic — no browser APIs
-│   │   ├── constants.ts  # MTU, MAX_BYTES_PER_BLOCK, …
-│   │   ├── crc16.ts      # CRC16-CCITT, buildQRPayload(), isValidPayload()
-│   │   ├── metadata.ts   # Block 0 header encode/decode
-│   │   ├── blocks.ts     # File splitting, block lengths
-│   │   ├── sender.ts     # Sender class (infinite EncodingPacket iterator)
-│   │   └── receiver.ts   # Receiver state machine
-│   ├── sender/       # Sender UI (vanilla TypeScript + CSS)
-│   └── receiver/     # Receiver UI (vanilla TypeScript + CSS)
-│
-├── tests/
-│   ├── helpers/      # PRNG, makeTestFile, ProtocolDriver, VirtualChannel
-│   ├── ci/           # Fast unit + QR smoke tests (run in CI)
-│   ├── local/        # Optical channel + multi-block tests (run locally)
-│   └── stress/       # Large-file stress tests
-│
-├── docs/
-│   ├── archi.md      # Full protocol specification
-│   └── testing.md    # Testing strategy and channel simulation design
-│
-├── vite.config.ts
-├── vitest.config.ts
-└── .github/workflows/ci.yml
-```
+- [x] Workspace scaffolded: 4 Rust crates + Python emitter package
+- [x] Emitter window: pixel-perfect Tk display with update loops
+- [ ] Capture (V4L2) — the decoder crate reports "not streaming" placeholders
+- [ ] Pixel-encoding protocol (frame layout, framing, block-0 metadata)
+- [ ] Emitter encodes real data (currently a data-seeded test pattern)
+- [ ] End-to-end transfer + calibration workflow
 
-### Tech stack
-
-| Concern  | Choice                                                       |
-|----------|--------------------------------------------------------------|
-| Build    | Vite 5 + TypeScript                                          |
-| UI       | Vanilla TypeScript (no framework)                            |
-| RaptorQ  | [`raptorq`](https://www.npmjs.com/package/raptorq) — Rust + WASM, RFC 6330 |
-| QR encode| [`qrcode`](https://www.npmjs.com/package/qrcode)             |
-| QR decode| [`jsqr`](https://www.npmjs.com/package/jsqr)                 |
-| Tests    | Vitest                                                       |
-| CI/CD    | GitHub Actions → GitHub Pages                                |
+See `AGENTS.md` for the architecture and development rules.

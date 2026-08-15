@@ -1,0 +1,9 @@
+[package]
+name = "pixbeam_calibrate"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+eframe = { workspace = true }
+egui = { workspace = true }
+pixbeam_decoder = { path = "../pixbeam_decoder" }

@@ -1,0 +1,23 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/pixbeam",
+    "crates/pixbeam_calibrate",
+    "crates/pixbeam_decoder",
+    "crates/pixbeam_sticher",
+]
+default-members = [
+    "crates/pixbeam",
+    "crates/pixbeam_calibrate",
+    "crates/pixbeam_decoder",
+    "crates/pixbeam_sticher",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+eframe = "0.35"
+egui = "0.35"
+thiserror = "2"

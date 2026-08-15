@@ -102,21 +102,16 @@ impl eframe::App for PixbeamApp {
                     bytes: 0,
                 });
             ui.label(
-                egui::RichText::new(format!(
-                    "Packets decoded: {}",
-                    self.decoder.decoded_packets
-                ))
-                .monospace(),
+                egui::RichText::new(format!("Packets decoded: {}", self.decoder.decoded_packets))
+                    .monospace(),
             )
             .on_hover_text("Packets successfully decoded from captured frames");
             ui.label(
                 egui::RichText::new(format!("Packets written: {}", progress.packets)).monospace(),
             )
             .on_hover_text("Packets appended to the output file");
-            ui.label(
-                egui::RichText::new(format!("Bytes written: {}", progress.bytes)).monospace(),
-            )
-            .on_hover_text("Bytes written to the output file so far");
+            ui.label(egui::RichText::new(format!("Bytes written: {}", progress.bytes)).monospace())
+                .on_hover_text("Bytes written to the output file so far");
             ui.add(
                 egui::ProgressBar::new(0.0)
                     .text("Waiting for block 0 (metadata) to size the transfer"),
